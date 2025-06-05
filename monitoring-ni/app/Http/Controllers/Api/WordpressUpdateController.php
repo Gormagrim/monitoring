@@ -14,16 +14,19 @@ use Carbon\Carbon; // Pour la gestion des dates
 
 class WordpressUpdateController extends Controller
 {
-    // Votre clé API attendue (stockez-la de manière plus sécurisée dans .env à terme)
-    private string $expectedApiKey = '#g41@eA&saYceiHh%PNHW$WZW08bt2N84KpJB';
 
     public function store(Request $request)
     {
         Log::info('API /site-updates: Données reçues -> ' . $request->getContent());
 
         // 1. Vérifier la clé API
+        $expectedApiKey = env('WORDPRESS_UPDATE_API_KEY');
+        if (empty($expectedApiKey)) {
+            Log::warning('WORDPRESS_UPDATE_API_KEY environment variable not set.');
+        }
+
         $receivedApiKey = $request->input('api_key');
-        if ($receivedApiKey !== $this->expectedApiKey) {
+        if ($receivedApiKey !== $expectedApiKey) {
             Log::warning('API /site-updates: Clé API invalide ou manquante.');
             return response()->json(['error' => 'Unauthorized - Invalid API Key'], 401);
         }
@@ -56,7 +59,7 @@ class WordpressUpdateController extends Controller
                     ->first();
 
         if (!$site) {
-            Log_warning('API /site-updates: Site non trouvé en base pour URL -> ' . $siteUrl);
+            Log::warning('API /site-updates: Site non trouvé en base pour URL -> ' . $siteUrl);
             return response()->json(['error' => 'Site not found for URL: ' . $siteUrl], 404);
         }
 
